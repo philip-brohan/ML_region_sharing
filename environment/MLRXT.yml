@@ -28,4 +28,4 @@ dependencies:
 # Replace with the path to your project directory root.
 
 variables:
-  PYTHONPATH: /home/h03/hadpb/Projects/ML_region_sharing
+  PYTHONPATH: /home/h03/hadpb/Projects/ML_region_sharing:/home/mo-hadpb/Projects/ML_region_sharing
