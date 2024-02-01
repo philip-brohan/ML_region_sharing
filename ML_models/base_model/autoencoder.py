@@ -23,14 +23,14 @@ args = parser.parse_args()
 
 # Load the data path, data source, and model specification
 from specify import specification
-from ML_models.base_model.makeDataset import getDataset
-from ML_models.base_model.autoencoderModel import DCVAE, getModel
+from ML_models.train_to_distribution.makeDataset import getDataset
+from ML_models.train_to_distribution.autoencoderModel import DCVAE, getModel
 
 
 # Get Datasets
 def getDatasets():
     # Set up the training data
-    trainingData = getDataset(specification, purpose="Train").repeat(2)
+    trainingData = getDataset(specification, purpose="Train").repeat(5)
     trainingData = trainingData.shuffle(specification["shuffleBufferSize"]).batch(
         specification["batchSize"]
     )

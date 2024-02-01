@@ -10,12 +10,16 @@
 import tensorflow as tf
 
 
-from ML_models.SPI_monthly.generic_model.makeDataset import getDataset
-from ML_models.SPI_monthly.generic_model.autoencoderModel import DCVAE, getModel
+from ML_models.train_to_distribution.makeDataset import getDataset
+from ML_models.train_to_distribution.autoencoderModel import DCVAE, getModel
 
-from ML_models.SPI_monthly.generic_model.gmUtils import plotValidationField
+from ML_models.train_to_distribution.gmUtils import plotValidationField
 
 from specify import specification
+
+specification[
+    "strategy"
+] = tf.distribute.get_strategy()  # No distribution for simple validation
 
 # I don't need all the messages about a missing font (on Isambard)
 import logging
@@ -42,7 +46,11 @@ purpose = "Test"
 if args.training:
     purpose = "Train"
 # Go through data and get the desired month
-dataset = getDataset(specification, purpose=purpose).batch(1)
+dataset = (
+    getDataset(specification, purpose=purpose)
+    .shuffle(specification["shuffleBufferSize"])
+    .batch(1)
+)
 input = None
 year = None
 month = None

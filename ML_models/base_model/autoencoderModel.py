@@ -133,12 +133,16 @@ class DCVAE(tf.keras.Model):
         )
         self.train_logpz = tf.Variable(0.0, trainable=False)
         self.train_logqz_x = tf.Variable(0.0, trainable=False)
+        self.train_logpz_g = tf.Variable(0.0, trainable=False)
+        self.train_logqz_g = tf.Variable(0.0, trainable=False)
         self.train_loss = tf.Variable(0.0, trainable=False)
         self.test_rmse = tf.Variable(
             tf.zeros([self.specification["nOutputChannels"]]), trainable=False
         )
         self.test_logpz = tf.Variable(0.0, trainable=False)
         self.test_logqz_x = tf.Variable(0.0, trainable=False)
+        self.test_logpz_g = tf.Variable(0.0, trainable=False)
+        self.test_logqz_g = tf.Variable(0.0, trainable=False)
         self.test_loss = tf.Variable(0.0, trainable=False)
         # And regularization loss
         self.regularization_loss = tf.Variable(0.0, trainable=False)
@@ -215,11 +219,28 @@ class DCVAE(tf.keras.Model):
             tf.reduce_mean(self.log_normal_pdf(latent, mean, logvar))
             * self.specification["beta"]
         )
+        # Distribution fit
+        logpz_g = (
+            tf.reduce_mean(self.log_normal_pdf(generated, 0.5, -1.61) * -1)
+            * self.specification["gamma"]
+        )
+        logqz_g = (
+            tf.reduce_mean(
+                self.log_normal_pdf(
+                    generated,
+                    tf.reduce_mean(generated),
+                    tf.math.log(tf.math.reduce_std(generated)),
+                )
+            )
+            * self.specification["gamma"]
+        )
 
         regularization = tf.add_n(self.losses)
 
         return (
             fit_metric,
+            logpz_g,
+            logqz_g,
             logpz,
             logqz_x,
             regularization,
@@ -233,9 +254,11 @@ class DCVAE(tf.keras.Model):
             loss_values = self.compute_loss(x, training=True)
             overall_loss = (
                 tf.math.reduce_mean(loss_values[0], axis=0)  # RMSE
-                + loss_values[1]  # logpz
-                + loss_values[2]  # logqz_x
-                + loss_values[3]  # Regularization
+                + loss_values[1]  # logpz_g
+                + loss_values[2]  # logqz_g
+                + loss_values[3]  # logpz
+                + loss_values[4]  # logqz_x
+                + loss_values[5]  # Regularization
             )
         gradients = tape.gradient(overall_loss, self.trainable_variables)
         # Clip the gradients - helps against sudden numerical problems
@@ -248,6 +271,8 @@ class DCVAE(tf.keras.Model):
     # Update the metrics
     def update_metrics(self, trainDS, testDS):
         self.train_rmse.assign(tf.zeros([self.specification["nOutputChannels"]]))
+        self.train_logpz_g.assign(0.0)
+        self.train_logqz_g.assign(0.0)
         self.train_logpz.assign(0.0)
         self.train_logqz_x.assign(0.0)
         self.train_loss.assign(0.0)
@@ -260,22 +285,30 @@ class DCVAE(tf.keras.Model):
                 tf.distribute.ReduceOp.MEAN, per_replica_losses, axis=None
             )
             self.train_rmse.assign_add(batch_losses[0])
-            self.train_logpz.assign_add(batch_losses[1])
-            self.train_logqz_x.assign_add(batch_losses[2])
+            self.train_logpz_g.assign_add(batch_losses[1])
+            self.train_logqz_g.assign_add(batch_losses[2])
+            self.train_logpz.assign_add(batch_losses[3])
+            self.train_logqz_x.assign_add(batch_losses[4])
             self.train_loss.assign_add(
                 tf.math.reduce_mean(batch_losses[0], axis=0)
                 + batch_losses[1]
                 + batch_losses[2]
                 + batch_losses[3]
+                + batch_losses[4]
+                + batch_losses[5]
             )
             validation_batch_count += 1
         self.train_rmse.assign(self.train_rmse / validation_batch_count)
         self.train_logpz.assign(self.train_logpz / validation_batch_count)
         self.train_logqz_x.assign(self.train_logqz_x / validation_batch_count)
+        self.train_logpz_g.assign(self.train_logpz_g / validation_batch_count)
+        self.train_logqz_g.assign(self.train_logqz_g / validation_batch_count)
         self.train_loss.assign(self.train_loss / validation_batch_count)
 
         # Same, but for the test data
         self.test_rmse.assign(tf.zeros([self.specification["nOutputChannels"]]))
+        self.test_logpz_g.assign(0.0)
+        self.test_logqz_g.assign(0.0)
         self.test_logpz.assign(0.0)
         self.test_logqz_x.assign(0.0)
         self.test_loss.assign(0.0)
@@ -288,17 +321,23 @@ class DCVAE(tf.keras.Model):
                 tf.distribute.ReduceOp.MEAN, per_replica_losses, axis=None
             )
             self.test_rmse.assign_add(batch_losses[0])
-            self.test_logpz.assign_add(batch_losses[1])
-            self.test_logqz_x.assign_add(batch_losses[2])
-            self.regularization_loss.assign(batch_losses[3])
+            self.test_logpz_g.assign_add(batch_losses[1])
+            self.test_logqz_g.assign_add(batch_losses[2])
+            self.test_logpz.assign_add(batch_losses[3])
+            self.test_logqz_x.assign_add(batch_losses[4])
+            self.regularization_loss.assign(batch_losses[5])
             self.test_loss.assign_add(
                 tf.math.reduce_mean(batch_losses[0], axis=0)
                 + batch_losses[1]
                 + batch_losses[2]
                 + batch_losses[3]
+                + batch_losses[4]
+                + batch_losses[5]
             )
             test_batch_count += 1
         self.test_rmse.assign(self.test_rmse / test_batch_count)
+        self.test_logpz_g.assign(self.test_logpz_g / test_batch_count)
+        self.test_logqz_g.assign(self.test_logqz_g / test_batch_count)
         self.test_logpz.assign(self.test_logpz / test_batch_count)
         self.test_logqz_x.assign(self.test_logqz_x / test_batch_count)
         self.test_loss.assign(self.test_loss / test_batch_count)
@@ -311,6 +350,8 @@ class DCVAE(tf.keras.Model):
                 self.train_rmse,
                 step=epoch,
             )
+            tf.summary.scalar("Train_logpz_g", self.train_logpz_g, step=epoch)
+            tf.summary.scalar("Train_logqz_g", self.train_logqz_g, step=epoch)
             tf.summary.scalar("Train_logpz", self.train_logpz, step=epoch)
             tf.summary.scalar("Train_logqz_x", self.train_logqz_x, step=epoch)
             tf.summary.scalar("Train_loss", self.train_loss, step=epoch)
@@ -319,6 +360,8 @@ class DCVAE(tf.keras.Model):
                 self.test_rmse,
                 step=epoch,
             )
+            tf.summary.scalar("Test_logpz_g", self.test_logpz_g, step=epoch)
+            tf.summary.scalar("Test_logqz_g", self.test_logqz_g, step=epoch)
             tf.summary.scalar("Test_logpz", self.test_logpz, step=epoch)
             tf.summary.scalar("Test_logqz_x", self.test_logqz_x, step=epoch)
             tf.summary.scalar("Test_loss", self.test_loss, step=epoch)
@@ -349,6 +392,18 @@ class DCVAE(tf.keras.Model):
             )
         )
         print(
+            "logpz_g   : {:>9.3f}, {:>9.3f}".format(
+                self.train_logpz_g.numpy(),
+                self.test_logpz_g.numpy(),
+            )
+        )
+        print(
+            "logqz_g   : {:>9.3f}, {:>9.3f}".format(
+                self.train_logqz_g.numpy(),
+                self.test_logqz_g.numpy(),
+            )
+        )
+        print(
             "regularize:            {:>9.3f}".format(
                 self.regularization_loss.numpy(),
             )
@@ -368,12 +423,12 @@ def getModel(specification, epoch=1):
 
     # If we are doing a restart, load the weights
     if epoch > 1:
-        weights_dir = ("%s/MLP/%s/weights/Epoch_%04d") % (
+        weights_dir = ("%s/MLES/%s/weights/Epoch_%04d") % (
             os.getenv("SCRATCH"),
             specification["modelName"],
             epoch,
         )
-        load_status = autoencoder.load_weights("%s/ckpt" % weights_dir)
+        load_status = autoencoder.load_weights("%s/ckpt" % weights_dir).expect_partial()
         load_status.assert_existing_objects_matched()
 
     return autoencoder

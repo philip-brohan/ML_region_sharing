@@ -46,9 +46,10 @@ specification[
 specification["nEpochs"] = 250  # How many epochs to train for
 specification["shuffleBufferSize"] = 1000  # Buffer size for shuffling
 specification["batchSize"] = 32  # Arbitrary
-specification["beta"] = 0.01  # Weighting factor for KL divergence error term
-specification["latentDimension"] = 100  # Embedding dimension
-specification["maxGradient"] = None  # Numerical instability protection
+specification["beta"] = 0.01  # Weighting factor for KL divergence of latent space
+specification["gamma"] = 0.0025  # Weighting factor for KL divergence of output
+specification["latentDimension"] = 20  # Embedding dimension
+specification["maxGradient"] = 5  # Numerical instability protection
 
 # Output control
 specification[

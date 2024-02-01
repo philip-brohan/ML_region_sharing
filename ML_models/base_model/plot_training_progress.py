@@ -3,7 +3,7 @@
 # Plot time-series of training progress
 
 from specify import specification
-from ML_models.SPI_monthly.generic_model.gmUtils import loadHistory, plotTrainingMetrics
+from ML_models.train_to_distribution.gmUtils import loadHistory, plotTrainingMetrics
 
 import argparse
 

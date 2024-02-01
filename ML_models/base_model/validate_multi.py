@@ -59,9 +59,9 @@ args = parser.parse_args()
 
 from utilities import grids
 
-from ML_models.SPI_monthly.generic_model.makeDataset import getDataset
-from ML_models.SPI_monthly.generic_model.autoencoderModel import DCVAE, getModel
-from ML_models.SPI_monthly.generic_model.gmUtils import (
+from ML_models.train_to_distribution.makeDataset import getDataset
+from ML_models.train_to_distribution.autoencoderModel import DCVAE, getModel
+from ML_models.train_to_distribution.gmUtils import (
     computeScalarStats,
     plotScalarStats,
 )

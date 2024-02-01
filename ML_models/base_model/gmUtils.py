@@ -135,6 +135,8 @@ def plotValidationField(specification, input, output, year, month, fileName):
 
     # Each variable a row in it's own subfigure
     subfigs = fig.subfigures(nFields, 1, wspace=0.01)
+    if nFields == 1:
+        subfigs = [subfigs]
 
     for varI in range(nFields):
         ax_var = subfigs[varI].subplots(nrows=1, ncols=3, width_ratios=wRatios)
@@ -203,7 +205,7 @@ def plotTrainingMetrics(
             (0, 0),
             1,
             1,
-            facecolor=(0.95, 0.0, 0.0, 1),
+            facecolor=(0.95, 0.95, 0.95, 1),
             fill=True,
             zorder=1,
         )
@@ -281,6 +283,7 @@ def plotTrainingMetrics(
         ncols=subplotLayout[1],
         sharex=True,
         sharey=True,
+        squeeze=False,
     )
     ax_rmse = [item for row in ax_rmse for item in row]  # Flatten
     ax_rmse[0].set_xlim(-1, epoch + 1)
