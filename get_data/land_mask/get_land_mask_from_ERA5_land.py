@@ -31,5 +31,5 @@ if not os.path.isfile("%s/land_mask.nc" % opdir): # Only bother if we don't have
     c.retrieve(
         "reanalysis-era5-land-monthly-means",
         ctrlB,
-        "%s/%s.nc" % (opdir, 'land_mask.nc'),
+        "%s/%s.nc" % (opdir, 'land_mask'),
     )

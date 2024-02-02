@@ -15,7 +15,7 @@ All blame should go to the maintainer; credit is more widely distributed:
   
 * Training data used came from the `ERA5 reanalysis <https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5>`_ and were downloaded from the Copernicus `Climate Change Service Climate Data Store <https://cds.climate.copernicus.eu>`_. 
     
-* This work used the `Isambard UK National Tier-2 HPC Service <https://gw4-isambard.github.io/docs/>`_` operated by GW4 and the UK Met Office, and funded by EPSRC (EP/P020224/1).
+* This work used the `Isambard UK National Tier-2 HPC Service <https://gw4-isambard.github.io/docs/>`_ operated by GW4 and the UK Met Office, and funded by EPSRC (EP/P020224/1).
 
 * This work benefited from AI assistance: Both `Github Copilot <https://github.com/features/copilot>`_ and `ChatGPT <https://chat.openai.com/>`_ were used to help write the code and documentation. In spite of this, the authors and maintainer are responsible for the entirety of the result.
 
