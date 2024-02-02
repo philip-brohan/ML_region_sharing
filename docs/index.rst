@@ -5,6 +5,17 @@ Dummy text to test the formatting
 
 
 
+Appendices
+----------
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   Get the training data <get_data/index>
+   Normalize the data for model fitting <normalization/index>
+   Utility functions for plotting and re-gridding <utils/index>
+
 
 Small print
 -----------
