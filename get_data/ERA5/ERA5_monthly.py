@@ -51,35 +51,3 @@ def load(
     return varC
 
 
-def load_climatology(variable, month, constraint=None):
-    fname = "%s/ERA5/monthly/climatology/%s_%02d.nc" % (
-        os.getenv("SCRATCH"),
-        variable,
-        month,
-    )
-    if not os.path.isfile(fname):
-        raise Exception("No climatology file %s" % fname)
-    if constraint is not None:
-        c = iris.load_cube(fname, constraint)
-    else:
-        c = iris.load_cube(fname)
-    add_coord_system(c)
-    c.long_name = variable
-    return c
-
-
-def load_sd_climatology(variable, month, constraint=None):
-    fname = "%s/ERA5/monthly/sd_climatology/%s_%02d.nc" % (
-        os.getenv("SCRATCH"),
-        variable,
-        month,
-    )
-    if not os.path.isfile(fname):
-        raise Exception("No sd climatology file %s" % fname)
-    if constraint is not None:
-        c = iris.load_cube(fname, constraint)
-    else:
-        c = iris.load_cube(fname)
-    add_coord_system(c)
-    c.long_name = variable
-    return c

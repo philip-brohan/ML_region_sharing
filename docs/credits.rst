@@ -1,7 +1,7 @@
 Authors and acknowledgements
 ----------------------------
 
-This document is currently maintained by `Philip Brohan <https://brohan.org>`_ (philip.brohan @ metoffice.gov.uk). All criticism should be directed to him - put please **don't** send email, `raise an issue <https://github.com/philip-brohan/ML_precipitation_dataset/issues/new>`_ instead.
+This document is currently maintained by `Philip Brohan <https://brohan.org>`_ (philip.brohan @ metoffice.gov.uk). All criticism should be directed to him - put please **don't** send email, `raise an issue <https://github.com/philip-brohan/ML_region_sharing/issues/new>`_ instead.
 
 |
 
@@ -9,13 +9,13 @@ All blame should go to the maintainer; credit is more widely distributed:
 
 * This document was written by `Philip Brohan  <https://brohan.org>`_ (Met Office). He was supported by the Met Office Hadley Centre Climate Programme funded by BEIS, and by the Met Office Weather and Climate Science for Service Partnership (WCSSP) South Africa as part of the Newton Fund.
   
-* This work follows on from `previous work on climate modelling and data assimilation with ML <https://brohan.org/Proxy_20CR/>`_.
+* This work was done in parallel with `a separate project on ML for precipitation reconstruction <https://brohan.org/ML_precipitation_dataset/>`_. A lot of code and documentation is shared with that project.
  
 * The `TensorFlow <https://www.tensorflow.org/>`_ library is used throughout.
   
-* Training data used came from the `ERA5 reanalysis <https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5>`_  and were downloaded from from the Copernicus `Climate Change Service Climate Data Store <https://cds.climate.copernicus.eu>`_. 
+* Training data used came from the `ERA5 reanalysis <https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5>`_ and were downloaded from the Copernicus `Climate Change Service Climate Data Store <https://cds.climate.copernicus.eu>`_. 
     
-* This work used the Isambard UK National Tier-2 HPC Service operated by GW4 and the UK Met Office, and funded by EPSRC (EP/P020224/1).
+* This work used the `Isambard UK National Tier-2 HPC Service <https://gw4-isambard.github.io/docs/>`_ operated by GW4 and the UK Met Office, and funded by EPSRC (EP/P020224/1).
 
 * This work benefited from AI assistance: Both `Github Copilot <https://github.com/features/copilot>`_ and `ChatGPT <https://chat.openai.com/>`_ were used to help write the code and documentation. In spite of this, the authors and maintainer are responsible for the entirety of the result.
 
@@ -25,4 +25,4 @@ All blame should go to the maintainer; credit is more widely distributed:
 
 * The code and documentation use `git <https://git-scm.com/>`_ and `GitHub <https://github.com/>`_. The documentation is written with `sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
 
-Note that appearance on this list does not mean that the person or organisation named endorses this work, agrees with any of it, or even knows of its existence.
+Note that appearance on this list does not mean that the person or organization named endorses this work, agrees with any of it, or even knows of its existence.
