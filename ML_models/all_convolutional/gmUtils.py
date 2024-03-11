@@ -102,6 +102,8 @@ def plotValidationField(specification, input, output, year, month, fileName):
     # Make the plot
     figScale = 3.0
     wRatios = (2, 2, 1.25)
+    if specification["trainingMask"] is not None:
+        wRatios = (2, 2, 1.25, 1.25)
     fig = Figure(
         figsize=(figScale * sum(wRatios), figScale * nFields),
         dpi=100,
@@ -139,7 +141,9 @@ def plotValidationField(specification, input, output, year, month, fileName):
         subfigs = [subfigs]
 
     for varI in range(nFields):
-        ax_var = subfigs[varI].subplots(nrows=1, ncols=3, width_ratios=wRatios)
+        ax_var = subfigs[varI].subplots(
+            nrows=1, ncols=len(wRatios), width_ratios=wRatios
+        )
         # Left - map of target
         varx = grids.E5sCube.copy()
         varx.data = np.squeeze(input[-1][:, :, :, varI].numpy())
@@ -167,10 +171,26 @@ def plotValidationField(specification, input, output, year, month, fileName):
             vMin=-0.25,
             cMap=get_cmap(specification["outputNames"][varI]),
         )
-        # Right - scatter plot of input::output
+        # Third - scatter plot of input::output - where used for training
         ax_var[2].set_xticks([0, 0.25, 0.5, 0.75, 1])
         ax_var[2].set_yticks([0, 0.25, 0.5, 0.75, 1])
-        plots.plotScatterAxes(ax_var[2], varx, vary, vMin=-0.25, vMax=1.25, bins="log")
+        if specification["trainingMask"] is not None:
+            varxm = varx.copy()
+            varym = vary.copy()
+            mflat = specification["trainingMask"].numpy().squeeze()
+            varxm.data = np.ma.masked_where(mflat == 1, varxm.data, copy=True)
+            varym.data = np.ma.masked_where(mflat == 1, varym.data, copy=True)
+        plots.plotScatterAxes(
+            ax_var[2], varxm, varym, vMin=-0.25, vMax=1.25, bins="log"
+        )
+        # Fourth only if masked - scatter plot of input::output - where masked out of training
+        if specification["trainingMask"] is not None:
+            ax_var[3].set_xticks([0, 0.25, 0.5, 0.75, 1])
+            ax_var[3].set_yticks([0, 0.25, 0.5, 0.75, 1])
+            mflat = specification["trainingMask"].numpy().squeeze()
+            varx.data = np.ma.masked_where(mflat == 0, varx.data, copy=True)
+            vary.data = np.ma.masked_where(mflat == 0, vary.data, copy=True)
+        plots.plotScatterAxes(ax_var[3], varx, vary, vMin=-0.25, vMax=1.25, bins="log")
 
     fig.savefig(fileName)
 
@@ -295,7 +315,9 @@ def plotTrainingMetrics(
         ax_rmse[varI].set_title(hts["OutputNames"][varI], fontsize=comp_font_size)
         ax_rmse[varI].grid(color=(0, 0, 0, 1), linestyle="-", linewidth=0.1)
         addLine(ax_rmse[varI], hts, "Train_RMSE", (1, 0.5, 0.5, 1), 10, idx=varI)
+        addLine(ax_rmse[varI], hts, "Train_RMSE_masked", (0.5, 0.5, 1, 1), 10, idx=varI)
         addLine(ax_rmse[varI], hts, "Test_RMSE", (1, 0, 0, 1), 20, idx=varI)
+        addLine(ax_rmse[varI], hts, "Test_RMSE_masked", (0, 0, 1, 1), 20, idx=varI)
         if chts is not None:
             for idx in range(len(chts["OutputNames"])):
                 if chts["OutputNames"][idx] == hts["OutputNames"][varI]:
@@ -396,17 +418,38 @@ def computeScalarStats(
     stats["target"] = {}
     stats["generated"] = {}
     for varI in range(nFields):
-        stats["target"][specification["outputNames"][varI]] = field_to_scalar(
-            tensor_to_cube(tf.squeeze(x[-1][:, :, :, varI])),
-        )
-        stats["generated"][specification["outputNames"][varI]] = field_to_scalar(
-            tensor_to_cube(tf.squeeze(generated[:, :, :, varI])),
-        )
+        if specification["trainingMask"] is None:
+            stats["target"][specification["outputNames"][varI]] = field_to_scalar(
+                tensor_to_cube(tf.squeeze(x[-1][:, :, :, varI])),
+            )
+            stats["generated"][specification["outputNames"][varI]] = field_to_scalar(
+                tensor_to_cube(tf.squeeze(generated[:, :, :, varI])),
+            )
+        else:
+            mask = specification["trainingMask"].numpy().squeeze()
+            stats["target"][specification["outputNames"][varI]] = field_to_scalar(
+                tensor_to_cube(tf.squeeze(x[-1][:, :, :, varI] * mask)),
+            )
+            stats["target"]["%s_masked" % specification["outputNames"][varI]] = (
+                field_to_scalar(
+                    tensor_to_cube(tf.squeeze(x[-1][:, :, :, varI] * (1 - mask))),
+                )
+            )
+            stats["generated"][specification["outputNames"][varI]] = field_to_scalar(
+                tensor_to_cube(tf.squeeze(generated[:, :, :, varI] * mask)),
+            )
+            stats["generated"]["%s_masked" % specification["outputNames"][varI]] = (
+                field_to_scalar(
+                    tensor_to_cube(tf.squeeze(generated[:, :, :, varI] * (1 - mask))),
+                )
+            )
     return stats
 
 
 def plotScalarStats(all_stats, specification, fileName="multi.webp"):
     nFields = specification["nOutputChannels"]
+    if specification["trainingMask"] is not None:
+        nFields *= 2
 
     figScale = 3.0
     wRatios = (3, 1.25)
@@ -496,14 +539,32 @@ def plotScalarStats(all_stats, specification, fileName="multi.webp"):
     subfigs = fig.subfigures(nFields, 1, wspace=0.01)
     if nFields == 1:
         subfigs = [subfigs]
-    for varI in range(nFields):
-        vName = specification["outputNames"][varI]
-        plot_var(
-            subfigs[varI],
-            all_stats["dtp"],
-            all_stats["target"][vName],
-            all_stats["generated"][vName],
-            vName,
-        )
+    for varI in range(len(specification["outputNames"])):
+        if specification["trainingMask"] is None:
+            vName = specification["outputNames"][varI]
+            plot_var(
+                subfigs[varI],
+                all_stats["dtp"],
+                all_stats["target"][vName],
+                all_stats["generated"][vName],
+                vName,
+            )
+        else:
+            vName = specification["outputNames"][varI]
+            plot_var(
+                subfigs[varI * 2],
+                all_stats["dtp"],
+                all_stats["target"][vName],
+                all_stats["generated"][vName],
+                vName,
+            )
+            vName = "%s_masked" % specification["outputNames"][varI]
+            plot_var(
+                subfigs[varI * 2 + 1],
+                all_stats["dtp"],
+                all_stats["target"][vName],
+                all_stats["generated"][vName],
+                specification["outputNames"][varI] + " (masked)",
+            )
 
     fig.savefig(fileName)

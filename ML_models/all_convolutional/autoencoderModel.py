@@ -205,12 +205,18 @@ class DCVAE(tf.keras.Model):
         self.train_rmse = tf.Variable(
             tf.zeros([self.specification["nOutputChannels"]]), trainable=False
         )
+        self.train_rmse_m = tf.Variable(
+            tf.zeros([self.specification["nOutputChannels"]]), trainable=False
+        )
         self.train_logpz = tf.Variable(0.0, trainable=False)
         self.train_logqz_x = tf.Variable(0.0, trainable=False)
         self.train_logpz_g = tf.Variable(0.0, trainable=False)
         self.train_logqz_g = tf.Variable(0.0, trainable=False)
         self.train_loss = tf.Variable(0.0, trainable=False)
         self.test_rmse = tf.Variable(
+            tf.zeros([self.specification["nOutputChannels"]]), trainable=False
+        )
+        self.test_rmse_m = tf.Variable(
             tf.zeros([self.specification["nOutputChannels"]]), trainable=False
         )
         self.test_logpz = tf.Variable(0.0, trainable=False)
@@ -345,6 +351,7 @@ class DCVAE(tf.keras.Model):
     # Update the metrics
     def update_metrics(self, trainDS, testDS):
         self.train_rmse.assign(tf.zeros([self.specification["nOutputChannels"]]))
+        self.train_rmse_m.assign(tf.zeros([self.specification["nOutputChannels"]]))
         self.train_logpz_g.assign(0.0)
         self.train_logqz_g.assign(0.0)
         self.train_logpz.assign(0.0)
@@ -352,6 +359,26 @@ class DCVAE(tf.keras.Model):
         self.train_loss.assign(0.0)
         validation_batch_count = 0
         for batch in trainDS:
+            # Metrics over masked area
+            if (
+                self.specification["trainingMask"] is not None
+            ):  # Metrics over masked area
+                mbatch = tf.where(
+                    self.specification["trainingMask"] == 0, batch[-1], 0.0
+                )
+                per_replica_losses = self.specification["strategy"].run(
+                    self.compute_loss, args=((batch[:-1], mbatch), False)
+                )
+                batch_losses = self.specification["strategy"].reduce(
+                    tf.distribute.ReduceOp.MEAN, per_replica_losses, axis=None
+                )
+                self.train_rmse_m.assign_add(batch_losses[0])
+            # Metrics over unmasked area
+            if self.specification["trainingMask"] is not None:
+                mbatch = tf.where(
+                    self.specification["trainingMask"] != 0, batch[-1], 0.0
+                )
+                batch = (batch[:-1], mbatch)
             per_replica_losses = self.specification["strategy"].run(
                 self.compute_loss, args=(batch, False)
             )
@@ -373,6 +400,7 @@ class DCVAE(tf.keras.Model):
             )
             validation_batch_count += 1
         self.train_rmse.assign(self.train_rmse / validation_batch_count)
+        self.train_rmse_m.assign(self.train_rmse_m / validation_batch_count)
         self.train_logpz.assign(self.train_logpz / validation_batch_count)
         self.train_logqz_x.assign(self.train_logqz_x / validation_batch_count)
         self.train_logpz_g.assign(self.train_logpz_g / validation_batch_count)
@@ -381,6 +409,7 @@ class DCVAE(tf.keras.Model):
 
         # Same, but for the test data
         self.test_rmse.assign(tf.zeros([self.specification["nOutputChannels"]]))
+        self.test_rmse_m.assign(tf.zeros([self.specification["nOutputChannels"]]))
         self.test_logpz_g.assign(0.0)
         self.test_logqz_g.assign(0.0)
         self.test_logpz.assign(0.0)
@@ -388,6 +417,26 @@ class DCVAE(tf.keras.Model):
         self.test_loss.assign(0.0)
         test_batch_count = 0
         for batch in testDS:
+            # Metrics over masked area
+            if (
+                self.specification["trainingMask"] is not None
+            ):  # Metrics over masked area
+                mbatch = tf.where(
+                    self.specification["trainingMask"] == 0, batch[-1], 0.0
+                )
+                per_replica_losses = self.specification["strategy"].run(
+                    self.compute_loss, args=((batch[:-1], mbatch), False)
+                )
+                batch_losses = self.specification["strategy"].reduce(
+                    tf.distribute.ReduceOp.MEAN, per_replica_losses, axis=None
+                )
+                self.test_rmse_m.assign_add(batch_losses[0])
+            # Metrics over unmasked area
+            if self.specification["trainingMask"] is not None:
+                mbatch = tf.where(
+                    self.specification["trainingMask"] != 0, batch[-1], 0.0
+                )
+                batch = (batch[:-1], mbatch)
             per_replica_losses = self.specification["strategy"].run(
                 self.compute_loss, args=(batch, False)
             )
@@ -410,6 +459,7 @@ class DCVAE(tf.keras.Model):
             )
             test_batch_count += 1
         self.test_rmse.assign(self.test_rmse / test_batch_count)
+        self.test_rmse_m.assign(self.test_rmse / test_batch_count)
         self.test_logpz_g.assign(self.test_logpz_g / test_batch_count)
         self.test_logqz_g.assign(self.test_logqz_g / test_batch_count)
         self.test_logpz.assign(self.test_logpz / test_batch_count)
@@ -424,6 +474,11 @@ class DCVAE(tf.keras.Model):
                 self.train_rmse,
                 step=epoch,
             )
+            tf.summary.write(
+                "Train_RMSE_masked",
+                self.train_rmse_m,
+                step=epoch,
+            )
             tf.summary.scalar("Train_logpz_g", self.train_logpz_g, step=epoch)
             tf.summary.scalar("Train_logqz_g", self.train_logqz_g, step=epoch)
             tf.summary.scalar("Train_logpz", self.train_logpz, step=epoch)
@@ -432,6 +487,11 @@ class DCVAE(tf.keras.Model):
             tf.summary.write(
                 "Test_RMSE",
                 self.test_rmse,
+                step=epoch,
+            )
+            tf.summary.write(
+                "Test_RMSE_masked",
+                self.test_rmse_m,
                 step=epoch,
             )
             tf.summary.scalar("Test_logpz_g", self.test_logpz_g, step=epoch)
@@ -446,13 +506,24 @@ class DCVAE(tf.keras.Model):
     # Print out the current metrics
     def printState(self):
         for i in range(self.specification["nOutputChannels"]):
-            print(
-                "{:<10s}: {:>9.3f}, {:>9.3f}".format(
-                    self.specification["outputNames"][i],
-                    self.train_rmse.numpy()[i],
-                    self.test_rmse.numpy()[i],
+            if self.specification["trainingMask"] is not None:
+                print(
+                    "{:<10s}: {:>9.3f}, {:>9.3f}, {:>9.3f}, {:>9.3f}".format(
+                        self.specification["outputNames"][i],
+                        self.train_rmse.numpy()[i],
+                        self.test_rmse.numpy()[i],
+                        self.train_rmse_m.numpy()[i],
+                        self.test_rmse_m.numpy()[i],
+                    )
                 )
-            )
+            else:
+                print(
+                    "{:<10s}: {:>9.3f}, {:>9.3f}".format(
+                        self.specification["outputNames"][i],
+                        self.train_rmse.numpy()[i],
+                        self.test_rmse.numpy()[i],
+                    )
+                )
         print(
             "logpz     : {:>9.3f}, {:>9.3f}".format(
                 self.train_logpz.numpy(),

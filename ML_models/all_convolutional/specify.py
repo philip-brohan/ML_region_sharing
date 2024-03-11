@@ -68,3 +68,12 @@ specification["regularization"] = {
     "generator_activity": 0.0,
     "generator_kernel": 0.0,
 }
+
+# Mask to specify a subset of data to train on
+specification["trainingMask"] = tf.concat(  # Train on NH only
+    (
+        tf.constant(0, shape=(360, 1440, specification["nOutputChannels"])),
+        tf.constant(1, shape=(361, 1440, specification["nOutputChannels"])),
+    ),
+    axis=0,
+)

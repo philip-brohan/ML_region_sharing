@@ -80,6 +80,9 @@ with specification["strategy"].scope():
 
         # Train on all batches in the training data
         for batch in trainingData:
+            if specification["trainingMask"] is not None:
+                mbatch = tf.where(specification["trainingMask"] != 0, batch[-1], 0.0)
+                batch = (batch[:-1], mbatch)
             per_replica_op = specification["strategy"].run(
                 autoencoder.train_on_batch, args=(batch, specification["optimizer"])
             )
