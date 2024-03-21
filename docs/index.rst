@@ -14,6 +14,7 @@ Appendices
 
    Get the training data <get_data/index>
    Normalize the data for model fitting <normalization/index>
+   An ML model with common structure at all locations <ML_all_convolutional/index>
    Utility functions for plotting and re-gridding <utils/index>
 
 

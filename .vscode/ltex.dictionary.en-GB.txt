@@ -10,3 +10,5 @@ figwidth
 maxdepth
 titlesonly
 netCDF
+Autoencoder
+DCVAE
