@@ -26,7 +26,7 @@ def load_tensor(file_names):
 
 # Find out how many tensors available for each month from a source
 def getDataAvailability(source):
-    dir = "%s/MLP/normalised_datasets/%s" % (os.getenv("SCRATCH"), source)
+    dir = "%s/MLP/normalized_datasets/%s" % (os.getenv("SCRATCH"), source)
     aFiles = os.listdir(dir)
     firstYr = 3000
     lastYr = 0

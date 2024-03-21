@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Make all the normalisation fits
+# Make all the normalization fits
 
 import os
 
@@ -8,7 +8,7 @@ sDir = os.path.dirname(os.path.realpath(__file__))
 
 
 def is_done(month, variable):
-    fn = "%s/MLP/normalisation/SPI_monthly/ERA5_tf_MM/%s/shape_m%02d.nc" % (
+    fn = "%s/MLP/normalization/SPI_monthly/ERA5_tf_MM/%s/shape_m%02d.nc" % (
         os.getenv("SCRATCH"),
         variable,
         month,

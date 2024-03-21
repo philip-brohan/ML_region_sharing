@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Make raw data tensors for normalisation
+# Make raw data tensors for normalization
 
 import os
 import argparse

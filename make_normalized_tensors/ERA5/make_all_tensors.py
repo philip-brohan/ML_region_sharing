@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Make normalised tensors
+# Make normalized tensors
 
 import os
 import argparse
@@ -18,7 +18,7 @@ args = parser.parse_args()
 
 
 def is_done(year, month, variable):
-    fn = "%s/MLP/normalised_datasets/ERA5_tf_MM/%s/%04d-%02d.tfd" % (
+    fn = "%s/MLP/normalized_datasets/ERA5_tf_MM/%s/%04d-%02d.tfd" % (
         os.getenv("SCRATCH"),
         variable,
         year,

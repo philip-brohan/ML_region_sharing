@@ -1,4 +1,4 @@
-# Create raw data dataset for normalisation
+# Create raw data dataset for normalization
 
 import os
 import sys

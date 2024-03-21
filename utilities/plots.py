@@ -77,8 +77,8 @@ def get_land_mask(grid_cube=None):
         "%s/ERA5/monthly/reanalysis/land_mask.nc" % os.getenv("SCRATCH")
     )
     lm = iris.util.squeeze(lm)
-    lm.coord("latitude").coord_system =iris.coord_systems.RotatedGeogCS(90, 180, 0)
-    lm.coord("longitude").coord_system =iris.coord_systems.RotatedGeogCS(90, 180, 0)
+    lm.coord("latitude").coord_system = iris.coord_systems.RotatedGeogCS(90, 180, 0)
+    lm.coord("longitude").coord_system = iris.coord_systems.RotatedGeogCS(90, 180, 0)
     lm.data = np.where(lm.data.mask, 0, 1)
     if grid_cube is not None:
         lm = lm.regrid(grid_cube, iris.analysis.Linear())
@@ -200,8 +200,11 @@ def plotHistAxes(ax, var, vMax=None, vMin=None, xlabel="", ylabel="", bins=100):
         vMax = np.max(var.data)
     if vMin is None:
         vMin = np.min(var.data)
+    x = var.data.flatten()
+    if np.ma.is_masked(x):
+        x = x.compressed()
     ax.hist(
-        x=var.data.compressed(),
+        x=x,
         range=(vMin, vMax),
         bins=bins,
         color="blue",

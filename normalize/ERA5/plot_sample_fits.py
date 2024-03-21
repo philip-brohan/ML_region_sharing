@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from makeDataset import getDataset
 
-from normalise import load_fitted
+from normalize import load_fitted
 from scipy.stats import gamma
 
 from utilities import plots
