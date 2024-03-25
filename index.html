@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Regional cross-training in ML climate models &#8212; Regional cross-training in ML climate models</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -13,7 +13,7 @@
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="How to reproduce and extend this work" href="how_to.html" /> 
+    <link rel="next" title="Get the data to be used" href="get_data/index.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -22,7 +22,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="how_to.html" title="How to reproduce and extend this work"
+          <a href="get_data/index.html" title="Get the data to be used"
              accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">MLRXT</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Regional cross-training in ML climate models</a></li> 
@@ -36,7 +36,42 @@
             
   <section id="regional-cross-training-in-ml-climate-models">
 <h1>Regional cross-training in ML climate models<a class="headerlink" href="#regional-cross-training-in-ml-climate-models" title="Permalink to this heading">¶</a></h1>
-<p>Dummy text to test the formatting</p>
+<p>A major challenge in the application of Machine Learning (ML) to climate science is the limited availability of training data. The decorrelation time of the atmosphere is a few days, so there are only of order 100 independent atmospheric states per year. If we have 100 years of training data, this means that there are about 10,000 independent states in total. And this is a best case - if we are training on monthly averages, the number is ten times smaller, and there are many parts of the world where we don’t have 100 years of data - where observational data are available only for a few decades. This is enough training data to fit an <a class="reference external" href="http://brohan.org/Proxy_20CR/">ML climate model</a>, but very much at the low end of what is needed for a deep learning model.</p>
+<p>So a key skill, in climate ML, is going to be making the most efficient use of limited data. This document describes a method for training a model on data from one region, and then applying it to another region. This is a form of transfer learning, and it is a way of making the most of the data that we have.</p>
+<figure class="align-center" id="id1" style="width: 95%">
+<a class="reference internal image-reference" href="_images/comparison.webp"><img alt="_images/comparison.webp" src="_images/comparison.webp" style="width: 95%;" /></a>
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="ML_all_convolutional/validation.html"><span class="doc">Validation plot</span></a> of an ML model trained only on data from the Northern Hemisphere (NH), and then applied to the Southern Hemisphere (SH). Left-hand column is the target field (<a class="reference internal" href="normalization/index.html"><span class="doc">normalized 2m-temperature</span></a>), centre column is the model output, and the two right-hand columns are scatter plots for the Northern and Southern Hemispheres.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p><a class="reference external" href="http://brohan.org/Proxy_20CR/">Previous work</a> has built ML climate models based on a conventional Deep Convolutional Variational Autoencoder (DCVAE). These models have a mix of convolutional layers and fully connected layers. Convolutional layers are an obvious choice if training data is spatially limited, as they learn and apply the same set of spatial patterns at all locations. But fully connected layers are a problem, because they have no spatial restrictions, and will optimize themselves to the training data only - and can’t be expected to produce useful results in a region where they haven’t been trained.</p>
+<p>So, inspired by the design of the autoencoder used in <a class="reference external" href="https://stability.ai/stable-image">stable diffusion</a>, we have built a DCVAE with only convolutional layers:</p>
+<figure class="align-center" id="id2" style="width: 95%">
+<a class="reference internal image-reference" href="_images/Model_structure.png"><img alt="_images/Model_structure.png" src="_images/Model_structure.png" style="width: 95%;" /></a>
+<figcaption>
+<p><span class="caption-text">Structure of the all-convolutional model. The encoder and decoder are both made up of a series of convolutional layers, with no fully connected layers. The latent space is a 3D grid. (<a class="reference internal" href="ML_all_convolutional/index.html"><span class="doc">Details</span></a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The model takes, as part of its input, a training mask. So it operates on <a class="reference external" href="https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5">ERA5</a> data, but trains to reproduce only the subset of that data where the mask is set. This means we can train on Northern Hemisphere data only (for example) but still evaluate the model on both the Northern Hemisphere, and the Southern Hemisphere (where it has not trained - we’re relying on the Northern Hemisphere result to generalize). The figure above shows how well this works, and we can also validate with a time-series of hemispheric averages:</p>
+<figure class="align-center" id="id3" style="width: 95%">
+<a class="reference internal image-reference" href="_images/multi.webp"><img alt="_images/multi.webp" src="_images/multi.webp" style="width: 95%;" /></a>
+<figcaption>
+<p><span class="caption-text">Global mean series (black original, red DCVAE output) and scatter plots for hemispheric means of 2m temperature. Top panel shows NH (used for training). Bottom panel shows SH (masked from training). (<a class="reference internal" href="ML_all_convolutional/validate_multi.html"><span class="doc">Details</span></a>).</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The results are better in the region trained on - but the difference is small. The model has generalized well.</p>
+<p>Note that a key component of the generalizability of the model is the use of a <a class="reference internal" href="normalization/index.html"><span class="doc">normalization scheme</span></a> that homogenizes the distribution of the data across the globe. This is a key part of the training process, and is essential for the model to be able to generalize to regions where it has not been trained.</p>
+<section id="appendices">
+<h2>Appendices<a class="headerlink" href="#appendices" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="get_data/index.html">Get the training data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization/index.html">Normalize the data for model fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ML_all_convolutional/index.html">An ML model with common structure at all locations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/index.html">Utility functions for plotting and re-gridding</a></li>
+</ul>
+</div>
+</section>
 <section id="small-print">
 <h2>Small print<a class="headerlink" href="#small-print" title="Permalink to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -61,6 +96,12 @@
             </a></p>
 <h3><a href="#">Table of Contents</a></h3>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="get_data/index.html">Get the training data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization/index.html">Normalize the data for model fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ML_all_convolutional/index.html">An ML model with common structure at all locations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/index.html">Utility functions for plotting and re-gridding</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="how_to.html">How to reproduce or extend this work</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">Authors and acknowledgements</a></li>
 </ul>
@@ -84,7 +125,7 @@ Please <a href="https://github.com/philip-brohan/ML_region_sharing/issues/new">r
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="how_to.html" title="How to reproduce and extend this work"
+          <a href="get_data/index.html" title="Get the data to be used"
              >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">MLRXT</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Regional cross-training in ML climate models</a></li> 

@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Authors and acknowledgements &#8212; Regional cross-training in ML climate models</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -36,23 +36,23 @@
             
   <section id="authors-and-acknowledgements">
 <h1>Authors and acknowledgements<a class="headerlink" href="#authors-and-acknowledgements" title="Permalink to this heading">¶</a></h1>
-<p>This document is currently maintained by <a class="reference external" href="https://brohan.org">Philip Brohan</a> (philip.brohan &#64; metoffice.gov.uk). All criticism should be directed to him - put please <strong>don’t</strong> send email, <a class="reference external" href="https://github.com/philip-brohan/ML_precipitation_dataset/issues/new">raise an issue</a> instead.</p>
+<p>This document is currently maintained by <a class="reference external" href="https://brohan.org">Philip Brohan</a> (philip.brohan &#64; metoffice.gov.uk). All criticism should be directed to him - put please <strong>don’t</strong> send email, <a class="reference external" href="https://github.com/philip-brohan/ML_region_sharing/issues/new">raise an issue</a> instead.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <p>All blame should go to the maintainer; credit is more widely distributed:</p>
 <ul class="simple">
 <li><p>This document was written by <a class="reference external" href="https://brohan.org">Philip Brohan</a> (Met Office). He was supported by the Met Office Hadley Centre Climate Programme funded by BEIS, and by the Met Office Weather and Climate Science for Service Partnership (WCSSP) South Africa as part of the Newton Fund.</p></li>
-<li><p>This work follows on from <a class="reference external" href="https://brohan.org/Proxy_20CR/">previous work on climate modelling and data assimilation with ML</a>.</p></li>
+<li><p>This work was done in parallel with <a class="reference external" href="https://brohan.org/ML_precipitation_dataset/">a separate project on ML for precipitation reconstruction</a>. A lot of code and documentation is shared with that project.</p></li>
 <li><p>The <a class="reference external" href="https://www.tensorflow.org/">TensorFlow</a> library is used throughout.</p></li>
-<li><p>Training data used came from the <a class="reference external" href="https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5">ERA5 reanalysis</a>  and were downloaded from from the Copernicus <a class="reference external" href="https://cds.climate.copernicus.eu">Climate Change Service Climate Data Store</a>.</p></li>
-<li><p>This work used the Isambard UK National Tier-2 HPC Service operated by GW4 and the UK Met Office, and funded by EPSRC (EP/P020224/1).</p></li>
+<li><p>Training data used came from the <a class="reference external" href="https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5">ERA5 reanalysis</a> and were downloaded from the Copernicus <a class="reference external" href="https://cds.climate.copernicus.eu">Climate Change Service Climate Data Store</a>.</p></li>
+<li><p>This work used the <a class="reference external" href="https://gw4-isambard.github.io/docs/">Isambard UK National Tier-2 HPC Service</a> operated by GW4 and the UK Met Office, and funded by EPSRC (EP/P020224/1).</p></li>
 <li><p>This work benefited from AI assistance: Both <a class="reference external" href="https://github.com/features/copilot">Github Copilot</a> and <a class="reference external" href="https://chat.openai.com/">ChatGPT</a> were used to help write the code and documentation. In spite of this, the authors and maintainer are responsible for the entirety of the result.</p></li>
 <li><p>The calculations here make extensive use of <a class="reference external" href="https://www.gnu.org/software/parallel/">GNU Parallel</a> (<a class="reference external" href="https://www.usenix.org/publications/login/february-2011-volume-36-number-1/gnu-parallel-command-line-power-tool">Tange 2011</a>).</p></li>
 <li><p>This software is written in <a class="reference external" href="https://www.python.org/">python</a>, in an environment configured with <a class="reference external" href="https://docs.conda.io/en/latest/">conda</a>.</p></li>
 <li><p>The code and documentation use <a class="reference external" href="https://git-scm.com/">git</a> and <a class="reference external" href="https://github.com/">GitHub</a>. The documentation is written with <a class="reference external" href="https://www.sphinx-doc.org/en/master/index.html">sphinx</a>.</p></li>
 </ul>
-<p>Note that appearance on this list does not mean that the person or organisation named endorses this work, agrees with any of it, or even knows of its existence.</p>
+<p>Note that appearance on this list does not mean that the person or organization named endorses this work, agrees with any of it, or even knows of its existence.</p>
 </section>
 
 
@@ -66,6 +66,11 @@
               <img class="logo" src="_static/MLRXT.webp" alt="Logo"/>
             </a></p>
 <h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="get_data/index.html">Get the training data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization/index.html">Normalize the data for model fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/index.html">Utility functions for plotting and re-gridding</a></li>
+</ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="how_to.html">How to reproduce or extend this work</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Authors and acknowledgements</a></li>
